@@ -15,7 +15,7 @@ def selectPlainText(numWords, sourceDir="../cryptograph-gutenberg-corpus/data/te
 
     wordList = text.split()
     wordStartIndex = random.randint(0, len(wordList)-(1+numWords))
-    return " ".join(wordList[wordStartIndex-1:wordStartIndex+(1+numWords)])
+    return " ".join(wordList[wordStartIndex:wordStartIndex+(numWords)])
 
 # Load statistics json from the previous repo
 def loadStatistics(spacesRemoved, sourceDir="../cryptograph-gutenberg-corpus/data/ngram/"):

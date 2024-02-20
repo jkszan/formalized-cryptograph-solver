@@ -57,8 +57,8 @@ class MonoalphabeticCipher:
         realPlaintext = self.decrypt(text)
         proposedPlaintext = self.decrypt(text, proposedKey)
         lettersCorrect = 0
-        print(realPlaintext)
-        print(proposedPlaintext)
+        #print(realPlaintext)
+        #print(proposedPlaintext)
         for letterPosition in range(len(realPlaintext)):
             if realPlaintext[letterPosition] != " " and realPlaintext[letterPosition] == proposedPlaintext[letterPosition]:
                 lettersCorrect += 1
@@ -66,9 +66,10 @@ class MonoalphabeticCipher:
         return keysCorrect, lettersCorrect/len(realPlaintext)
 
 
-mon = MonoalphabeticCipher()
-plaintext = "testing this cipher scheme"
-ciphertext = mon.encrypt(plaintext)
-print(ciphertext)
-plaintext = mon.decrypt(ciphertext)
-print(plaintext)
+if __name__ == "__main__":
+    mon = MonoalphabeticCipher()
+    plaintext = "testing this cipher scheme"
+    ciphertext = mon.encrypt(plaintext)
+    print(ciphertext)
+    plaintext = mon.decrypt(ciphertext)
+    print(plaintext)

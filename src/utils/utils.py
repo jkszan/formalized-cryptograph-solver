@@ -7,15 +7,22 @@ def selectPlainText(numWords, sourceDir="../cryptograph-gutenberg-corpus/data/te
     # return plainText
     fileList = os.listdir(sourceDir)
     chosenFile = ""
-    while not chosenFile.endswith(".txt"):
-        chosenFile = fileList[random.randint(0, len(fileList)-1)]
+    fileFound = False
+    while not fileFound:
 
-    with open(sourceDir + chosenFile, "r", encoding="UTF-8") as file:
-        text = file.read()
+        while not chosenFile.endswith(".txt"):
+            chosenFile = fileList[random.randint(0, len(fileList)-1)]
 
-    wordList = text.split()
+        with open(sourceDir + chosenFile, "r", encoding="UTF-8") as file:
+            text = file.read()
+
+        wordList = text.split()
+
+        if len(wordList) > numWords:
+            fileFound = True
+
     wordStartIndex = random.randint(0, len(wordList)-(1+numWords))
-    return " ".join(wordList[wordStartIndex:wordStartIndex+(numWords)])
+    return " ".join(wordList[wordStartIndex:wordStartIndex+(numWords)]).strip()
 
 # Load statistics json from the previous repo
 def loadStatistics(spacesRemoved, sourceDir="../cryptograph-gutenberg-corpus/data/ngram/"):

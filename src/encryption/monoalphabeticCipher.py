@@ -57,13 +57,19 @@ class MonoalphabeticCipher:
         realPlaintext = self.decrypt(text)
         proposedPlaintext = self.decrypt(text, proposedKey)
         lettersCorrect = 0
+        lettersTotal = 0
         #print(realPlaintext)
         #print(proposedPlaintext)
         for letterPosition in range(len(realPlaintext)):
+
+            if realPlaintext[letterPosition] != " ":
+                lettersTotal += 1
+
             if realPlaintext[letterPosition] != " " and realPlaintext[letterPosition] == proposedPlaintext[letterPosition]:
                 lettersCorrect += 1
 
-        return keysCorrect, lettersCorrect/len(realPlaintext)
+
+        return keysCorrect, lettersCorrect/lettersTotal
 
 
 if __name__ == "__main__":

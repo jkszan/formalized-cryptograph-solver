@@ -4,7 +4,7 @@ import json
 
 # Select random plaintext string from random .txt file in /txt/ directory (Add default path as sourceDir)
 def selectPlainText(numWords, sourceDir="../cryptograph-gutenberg-corpus/data/text/"):
-    # return plainText
+
     fileList = os.listdir(sourceDir)
     chosenFile = ""
     fileFound = False

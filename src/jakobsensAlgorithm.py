@@ -202,13 +202,14 @@ def jakobsensAlgorithm(plaintextWords, spacesRemoved = False):
     return lettersCorrect, plaintextCorrect
 
 
-lettersCorrect = []
-plaintextCorrect = []
+if __name__ == "__main__":
+    lettersCorrect = []
+    plaintextCorrect = []
 
-for i in range(100):
-    newLettersCorrect, newPlaintextCorrect = jakobsensAlgorithm(50, False)
-    lettersCorrect.append(newLettersCorrect)
-    plaintextCorrect.append(newPlaintextCorrect)
+    for i in range(100):
+        newLettersCorrect, newPlaintextCorrect = jakobsensAlgorithm(50, False)
+        lettersCorrect.append(newLettersCorrect)
+        plaintextCorrect.append(newPlaintextCorrect)
 
-print("Average Letters Correct:", sum(lettersCorrect)/len(lettersCorrect))
-print("Average Plaintext Correct:", sum(plaintextCorrect)/len(plaintextCorrect))
+    print("Average Letters Correct:", sum(lettersCorrect)/len(lettersCorrect))
+    print("Average Plaintext Correct:", sum(plaintextCorrect)/len(plaintextCorrect))

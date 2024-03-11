@@ -20,6 +20,8 @@ def selectPlainText(numWords, sourceDir="../cryptograph-gutenberg-corpus/data/te
 
         if len(wordList) > numWords:
             fileFound = True
+        else:
+            chosenFile = ""
 
     wordStartIndex = random.randint(0, len(wordList)-(1+numWords))
     return " ".join(wordList[wordStartIndex:wordStartIndex+(numWords)]).strip()

@@ -1,7 +1,6 @@
 import sys,os
 sys.path.append(os.getcwd())
 
-from decimal import Decimal as D
 from src.utils.utils import loadStatistics, selectPlainText
 from src.encryption.monoalphabeticCipher import MonoalphabeticCipher
 from collections import defaultdict
@@ -66,9 +65,6 @@ class DistributionMatrix:
                 score += abs(self.letterMatrix[row][col] - expectationMatrix.letterMatrix[row][col])
         return score
 
-def swapElements(key, i, j):
-    key[i], key[j] = key[j], key[i]
-
 # Initialize the key maybe randomly, probably have most common unigram = most common ciphertext
 def initializeExpectationMatrix(ciphertextLength, wordCount, spacesRemoved=False):
     stats = loadStatistics(spacesRemoved=spacesRemoved)
@@ -101,6 +97,9 @@ def initializeExpectationMatrix(ciphertextLength, wordCount, spacesRemoved=False
 
     # Creating a distribution matrix for our expected values
     return DistributionMatrix(letterKey, expectedFrequencies)
+
+def swapElements(key, i, j):
+    key[i], key[j] = key[j], key[i]
 
 def getDigramFrequencies(punativePlaintext):
     digramCounts = defaultdict(lambda: 0)
@@ -141,25 +140,12 @@ def generateInitialKey(ciphertext):
 
     return initialKey
 
-def jakobsensAlgorithm(plaintextWords, spacesRemoved = False):
+def jakobsensAlgorithm(ciphertext, punativeKey, punativePlaintext, expectedDist, spacesRemoved = False,):
 
-    plaintext = selectPlainText(plaintextWords)
-
-    if spacesRemoved:
-        plaintext = plaintext.replace(" ", "")
-    cipher = MonoalphabeticCipher()
-    ciphertext = cipher.encrypt(plaintext)
-
-    punativeKey = generateInitialKey(ciphertext)
-
-    punativePlaintext = cipher.decrypt(ciphertext, punativeKey)
 
     digramFrequencies = getDigramFrequencies(punativePlaintext)
 
     digramDist = DistributionMatrix(punativeKey, digramFrequencies)
-    expectedDist = initializeExpectationMatrix(len(ciphertext), plaintextWords, spacesRemoved=False)
-
-    print("Initial", cipher.evalProposedKey(ciphertext, punativeKey))
 
     a = 1
     b = 1
@@ -188,28 +174,52 @@ def jakobsensAlgorithm(plaintextWords, spacesRemoved = False):
                 done = True
         print(curScore, end='\r')
 
-    print("\nFinal", cipher.evalProposedKey(ciphertext, punativeKey))
-
-    print("Correct Keys:")
-    realKey = cipher.keyCodex
-    for key, val in punativeKey.items():
-        if realKey[key] == val:
-            print(val, end = " ")
-    print("")
-
-    lettersCorrect, plaintextCorrect = cipher.evalProposedKey(ciphertext, punativeKey)
-
-    return lettersCorrect, plaintextCorrect
+    return punativeKey
 
 
 if __name__ == "__main__":
     lettersCorrect = []
     plaintextCorrect = []
+    plaintextWords = 50
+    spacesRemoved = False
+
+
 
     for i in range(100):
-        newLettersCorrect, newPlaintextCorrect = jakobsensAlgorithm(50, False)
+        
+        # Generating and getting plaintext
+        plaintext = selectPlainText(plaintextWords)
+        if spacesRemoved:
+            plaintext = plaintext.replace(" ", "")
+
+        # Creating cipher object and generating ciphertext
+        cipher = MonoalphabeticCipher()
+        ciphertext = cipher.encrypt(plaintext)
+
+        # Generating an initial key and decrypting the ciphertext into an initial plaintext guess
+        initialKey = generateInitialKey(ciphertext)
+        initialPunativePlaintext = cipher.decrypt(ciphertext, initialKey)
+
+        # Generating the expected distribution matrix
+        expectedDist = initializeExpectationMatrix(len(ciphertext), plaintextWords, spacesRemoved=spacesRemoved)
+
+        # Running Jakobsens algorithm
+        derivedKey = jakobsensAlgorithm(ciphertext, initialKey, initialPunativePlaintext, expectedDist, spacesRemoved=spacesRemoved)
+
+
+        print("\nFinal", cipher.evalProposedKey(ciphertext, derivedKey))
+
+        print("Correct Keys:")
+        realKey = cipher.keyCodex
+        for key, val in derivedKey.items():
+            if realKey[key] == val:
+                print(val, end = " ")
+        print("")
+
+        newLettersCorrect, newPlaintextCorrect = cipher.evalProposedKey(ciphertext, derivedKey)
         lettersCorrect.append(newLettersCorrect)
         plaintextCorrect.append(newPlaintextCorrect)
+
 
     print("Average Letters Correct:", sum(lettersCorrect)/len(lettersCorrect))
     print("Average Plaintext Correct:", sum(plaintextCorrect)/len(plaintextCorrect))

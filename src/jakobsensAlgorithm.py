@@ -81,7 +81,7 @@ def initializeExpectationMatrix(ciphertextLength, wordCount, spacesRemoved=False
 
                 if spacesRemoved:
                     expectedFrequencies[first+second] = stats[first+second]*(ciphertextLength - 1)
-                
+
                 elif first == " ":
                     expectedFrequencies[first+second] = stats[first+second]*(wordCount-1)
 
@@ -176,6 +176,30 @@ def jakobsensAlgorithm(ciphertext, punativeKey, punativePlaintext, expectedDist,
 
     return punativeKey
 
+def testJakobsens(plaintext, spacesRemoved = False):
+
+    if spacesRemoved:
+        plaintext = plaintext.replace(" ", "")
+
+    # Creating cipher object and generating ciphertext
+    cipher = MonoalphabeticCipher()
+    ciphertext = cipher.encrypt(plaintext)
+
+    # Generating an initial key and decrypting the ciphertext into an initial plaintext guess
+    initialKey = generateInitialKey(ciphertext)
+    initialPunativePlaintext = cipher.decrypt(ciphertext, initialKey)
+
+    # Generating the expected distribution matrix
+    expectedDist = initializeExpectationMatrix(len(ciphertext), plaintextWords, spacesRemoved=spacesRemoved)
+
+    # Running Jakobsens algorithm
+    derivedKey = jakobsensAlgorithm(ciphertext, initialKey, initialPunativePlaintext, expectedDist, spacesRemoved=spacesRemoved)
+
+    print("\nFinal", cipher.evalProposedKey(ciphertext, derivedKey))
+
+    newLettersCorrect, newPlaintextCorrect = cipher.evalProposedKey(ciphertext, derivedKey)
+
+    return newLettersCorrect, newPlaintextCorrect
 
 if __name__ == "__main__":
     lettersCorrect = []
@@ -183,10 +207,8 @@ if __name__ == "__main__":
     plaintextWords = 50
     spacesRemoved = False
 
-
-
     for i in range(100):
-        
+
         # Generating and getting plaintext
         plaintext = selectPlainText(plaintextWords)
         if spacesRemoved:
@@ -205,7 +227,6 @@ if __name__ == "__main__":
 
         # Running Jakobsens algorithm
         derivedKey = jakobsensAlgorithm(ciphertext, initialKey, initialPunativePlaintext, expectedDist, spacesRemoved=spacesRemoved)
-
 
         print("\nFinal", cipher.evalProposedKey(ciphertext, derivedKey))
 

@@ -1,4 +1,4 @@
-from jakobsensAlgorithm import jakobsensAlgorithm, initializeExpectationMatrix
+from src.jakobsensAlgorithm import jakobsensAlgorithm, initializeExpectationMatrix
 from src.utils.utils import selectPlainText, loadStatistics
 from src.encryption.monoalphabeticCipher import MonoalphabeticCipher
 from src.utils.stats import calculateLanguageCertainty
@@ -16,7 +16,7 @@ def generateInitialKey():
 
     return key
 
-def testJakobsensRandomRestart(plaintext, numRestarts = 3, spacesRemoved = False):
+def testJakobsensRandomRestart(plaintext, plaintextWords, numRestarts = 3, spacesRemoved = False):
 
     if spacesRemoved:
         plaintext = plaintext.replace(" ", "")
@@ -33,13 +33,15 @@ def testJakobsensRandomRestart(plaintext, numRestarts = 3, spacesRemoved = False
     minLanguageCert = float('inf')
     bestDerivedKey = None
 
-    for i in range(numRestarts):
+    for _ in range(numRestarts):
 
         initialKey = generateInitialKey()
         initialPunativePlaintext = cipher.decrypt(ciphertext, initialKey)
 
-        derivedKey = jakobsensAlgorithm(ciphertext, initialKey, initialPunativePlaintext, expectedDist, spacesRemoved=spacesRemoved)
+        derivedKey = jakobsensAlgorithm(initialKey, initialPunativePlaintext, expectedDist)
         proposedPlaintext = cipher.decrypt(ciphertext, derivedKey)
+
+        #print("Fair oracle val:", cipher.evalProposedKey(ciphertext, derivedKey), calculateLanguageCertainty(proposedPlaintext, statsJson))
 
         languageCertaintyScore = calculateLanguageCertainty(proposedPlaintext, statsJson)
 
@@ -47,14 +49,14 @@ def testJakobsensRandomRestart(plaintext, numRestarts = 3, spacesRemoved = False
             bestDerivedKey = derivedKey
             minLanguageCert = languageCertaintyScore
 
-    print("\nFinal", cipher.evalProposedKey(ciphertext, bestDerivedKey))
+    #print("\nFinal", cipher.evalProposedKey(ciphertext, bestDerivedKey))
 
     newLettersCorrect, newPlaintextCorrect = cipher.evalProposedKey(ciphertext, bestDerivedKey)
 
     return newLettersCorrect, newPlaintextCorrect
 
 
-def testJakobsensRandomRestartCheating(plaintext, numRestarts = 3, spacesRemoved = False):
+def testJakobsensRandomRestartCheating(plaintext, plaintextWords, numRestarts = 3, spacesRemoved = False):
 
     if spacesRemoved:
         plaintext = plaintext.replace(" ", "")
@@ -69,12 +71,12 @@ def testJakobsensRandomRestartCheating(plaintext, numRestarts = 3, spacesRemoved
     maxPlaintextCorrect = -1
     bestDerivedKey = None
 
-    for i in range(numRestarts):
+    for _ in range(numRestarts):
 
         initialKey = generateInitialKey()
         initialPunativePlaintext = cipher.decrypt(ciphertext, initialKey)
 
-        derivedKey = jakobsensAlgorithm(ciphertext, initialKey, initialPunativePlaintext, expectedDist, spacesRemoved=spacesRemoved)
+        derivedKey = jakobsensAlgorithm(initialKey, initialPunativePlaintext, expectedDist)
 
         _, plaintextCorrect = cipher.evalProposedKey(ciphertext, derivedKey)
 
@@ -82,7 +84,7 @@ def testJakobsensRandomRestartCheating(plaintext, numRestarts = 3, spacesRemoved
             bestDerivedKey = derivedKey
             maxPlaintextCorrect = plaintextCorrect
 
-    print("\nFinal", cipher.evalProposedKey(ciphertext, bestDerivedKey))
+    #print("\nFinal (Cheat)", cipher.evalProposedKey(ciphertext, bestDerivedKey))
 
     newLettersCorrect, newPlaintextCorrect = cipher.evalProposedKey(ciphertext, bestDerivedKey)
 
@@ -92,22 +94,29 @@ if __name__ == "__main__":
 
     lettersCorrect = []
     plaintextCorrect = []
+    fairLet = []
+    fairPlain = []
     plaintextWords = 50
     spacesRemoved = False
     numKeys = 3
 
-    for i in range(100):
+    for i in range(5):
 
         # Generating and getting plaintext
         plaintext = selectPlainText(plaintextWords)
         #if spacesRemoved:
         #    plaintext = plaintext.replace(" ", "")
 
-        #newLettersCorrect, newPlaintextCorrect = testJakobsensRandomRestartCheating(plaintext, spacesRemoved=spacesRemoved)
-        newLettersCorrect, newPlaintextCorrect = testJakobsensRandomRestart(plaintext, spacesRemoved=spacesRemoved)
+        newLettersCorrect, newPlaintextCorrect = testJakobsensRandomRestartCheating(plaintext, plaintextWords, numKeys, spacesRemoved=spacesRemoved)
+        fairNewLettersCorrect, fairNewPlaintextCorrect = testJakobsensRandomRestart(plaintext, plaintextWords, numKeys, spacesRemoved=spacesRemoved)
+        fairLet.append(fairNewLettersCorrect)
+        fairPlain.append(fairNewPlaintextCorrect)
         lettersCorrect.append(newLettersCorrect)
         plaintextCorrect.append(newPlaintextCorrect)
 
 
     print("Average Letters Correct:", sum(lettersCorrect)/len(lettersCorrect))
     print("Average Plaintext Correct:", sum(plaintextCorrect)/len(plaintextCorrect))
+
+    print("Average Fair Letters Correct:", sum(fairLet)/len(lettersCorrect))
+    print("Average Fair Plaintext Correct:", sum(fairPlain)/len(plaintextCorrect))

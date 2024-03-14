@@ -8,7 +8,7 @@ def __chiSquaredTest(expected, real):
     return pow((real-expected), 2)/expected
 
 # TODO: Add optimization that exits the calculation early if it surpasses minChi
-def calculateLanguageCertainty(proposedPlaintext, statsJson, curMin=float("-inf")):
+def calculateLanguageCertainty(proposedPlaintext, statsJson, curMin=float("inf")):
 
     counts = defaultdict(lambda: 0)
 
@@ -26,18 +26,19 @@ def calculateLanguageCertainty(proposedPlaintext, statsJson, curMin=float("-inf"
     loss = 0
     for ngram, freq in statsJson.items():
         try:
-            if len(ngram) < 2:
+            if len(ngram) < 3:
                 # Using a naive loss function of distance between expected occurances as a percentage of expected value
                 expected = freq * (len(proposedPlaintext) - len(ngram))
                 loss += __chiSquaredTest(expected, counts[ngram])
                 #loss += abs(((count - expected))/expected)
+
 
         # KeyError will happen in the case that a bigram/trigram is not represented at all in the statistics json (probability of 0)
         # If we fully trusted our statistics this should return infinite loss, not 0
         except ZeroDivisionError:
             loss += pow(counts[ngram], 2)
         
-        if curMin < loss:
-            return loss
+        #if curMin < loss:
+        #    return loss
 
     return loss

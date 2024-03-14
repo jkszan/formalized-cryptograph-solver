@@ -140,7 +140,7 @@ def generateInitialKey(ciphertext):
 
     return initialKey
 
-def jakobsensAlgorithm(ciphertext, punativeKey, punativePlaintext, expectedDist, spacesRemoved = False,):
+def jakobsensAlgorithm(punativeKey, punativePlaintext, expectedDist):
 
 
     digramFrequencies = getDigramFrequencies(punativePlaintext)
@@ -176,7 +176,7 @@ def jakobsensAlgorithm(ciphertext, punativeKey, punativePlaintext, expectedDist,
 
     return punativeKey
 
-def testJakobsens(plaintext, spacesRemoved = False):
+def testJakobsens(plaintext, plaintextWords, spacesRemoved = False):
 
     if spacesRemoved:
         plaintext = plaintext.replace(" ", "")
@@ -193,7 +193,7 @@ def testJakobsens(plaintext, spacesRemoved = False):
     expectedDist = initializeExpectationMatrix(len(ciphertext), plaintextWords, spacesRemoved=spacesRemoved)
 
     # Running Jakobsens algorithm
-    derivedKey = jakobsensAlgorithm(ciphertext, initialKey, initialPunativePlaintext, expectedDist, spacesRemoved=spacesRemoved)
+    derivedKey = jakobsensAlgorithm(initialKey, initialPunativePlaintext, expectedDist)
 
     print("\nFinal", cipher.evalProposedKey(ciphertext, derivedKey))
 
@@ -204,10 +204,10 @@ def testJakobsens(plaintext, spacesRemoved = False):
 if __name__ == "__main__":
     lettersCorrect = []
     plaintextCorrect = []
-    plaintextWords = 50
+    plaintextWords = 500
     spacesRemoved = False
 
-    for i in range(100):
+    for i in range(1):
 
         # Generating and getting plaintext
         plaintext = selectPlainText(plaintextWords)
@@ -226,7 +226,7 @@ if __name__ == "__main__":
         expectedDist = initializeExpectationMatrix(len(ciphertext), plaintextWords, spacesRemoved=spacesRemoved)
 
         # Running Jakobsens algorithm
-        derivedKey = jakobsensAlgorithm(ciphertext, initialKey, initialPunativePlaintext, expectedDist, spacesRemoved=spacesRemoved)
+        derivedKey = jakobsensAlgorithm(initialKey, initialPunativePlaintext, expectedDist)
 
         print("\nFinal", cipher.evalProposedKey(ciphertext, derivedKey))
 

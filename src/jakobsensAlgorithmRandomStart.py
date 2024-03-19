@@ -16,6 +16,34 @@ def generateInitialKey():
 
     return key
 
+def jakobsensRandomRestart(ciphertext, expectedDist, numRestarts = 3, spacesRemoved = False):
+    statsJson = loadStatistics(spacesRemoved)
+
+    minLanguageCert = float('inf')
+    bestDerivedKey = None
+
+    # Creating cipher object and generating ciphertext
+    cipher = MonoalphabeticCipher()
+
+    for _ in range(numRestarts):
+
+        initialKey = generateInitialKey()
+        initialPunativePlaintext = cipher.decrypt(ciphertext, initialKey)
+
+        derivedKey = jakobsensAlgorithm(initialKey, initialPunativePlaintext, expectedDist)
+        proposedPlaintext = cipher.decrypt(ciphertext, derivedKey)
+
+        #print("Fair oracle val:", cipher.evalProposedKey(ciphertext, derivedKey), calculateLanguageCertainty(proposedPlaintext, statsJson))
+
+        languageCertaintyScore = calculateLanguageCertainty(proposedPlaintext, statsJson)
+
+        if languageCertaintyScore < minLanguageCert:
+            bestDerivedKey = derivedKey
+            minLanguageCert = languageCertaintyScore
+    
+    return bestDerivedKey
+
+
 def testJakobsensRandomRestart(plaintext, plaintextWords, numRestarts = 3, spacesRemoved = False):
 
     if spacesRemoved:

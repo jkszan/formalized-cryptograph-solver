@@ -1,5 +1,5 @@
-from src.utils.utils import loadStatistics
-from src.utils.stats import calculateLanguageCertainty
+from utils.utils import loadStatistics
+from utils.stats import calculateLanguageCertainty
 from collections import defaultdict
 
 LETTERORDER = "abcdefghijklmnopqrstuvwxyz"

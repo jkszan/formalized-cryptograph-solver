@@ -1,11 +1,7 @@
-from src.jakobsensAlgorithmRandomStart import jakobsensRandomRestart as biJakobsensAlgorithm
-from src.jakobsensAlgorithm import initializeExpectationMatrix as initBiExpectation
-
-import sys,os
-sys.path.append(os.getcwd())
-
-from src.utils.utils import loadStatistics, selectPlainText
-from src.encryption.monoalphabeticCipher import MonoalphabeticCipher
+from jakobsensAlgorithmRandomStart import jakobsensRandomRestart as biJakobsensAlgorithm
+from jakobsensAlgorithm import initializeExpectationMatrix as initBiExpectation
+from utils.utils import loadStatistics, selectPlainText
+from encryption.monoalphabeticCipher import MonoalphabeticCipher
 from collections import defaultdict
 
 LETTERORDER = "abcdefghijklmnopqrstuvwxyz "
@@ -60,7 +56,7 @@ class DistributionCube:
 
         for i in range(len(self.letterMatrix)):
             self.letterMatrix[i][colOne], self.letterMatrix[i][colTwo] = self.letterMatrix[i][colTwo], self.letterMatrix[i][colOne]
-    
+
     def _swapDepths(self, depthOne, depthTwo):
         for i in range(len(self.letterMatrix)):
             for j in range(len(self.letterMatrix)):
@@ -89,13 +85,13 @@ def initializeExpectationMatrix(ciphertext, spacesRemoved=False):
             first = ciphertext[i-2]
             second = ciphertext[i-1]
             third = ciphertext[i]
-            
+
             if first == " " and third != " ":
                 countSpaced[" 00"] += 1
 
             elif first == " " and third == " ":
                 countSpaced[" 0 "] += 1
-                
+
             elif second == " ":
                 countSpaced["0 0"] += 1
 
@@ -110,7 +106,7 @@ def initializeExpectationMatrix(ciphertext, spacesRemoved=False):
     for first in LETTERORDER:
         letterKey[first] = first
         for second in LETTERORDER:
-            
+
             for third in LETTERORDER:
                 # TODO: Need to actually count the number of in each space
                 # Setting our expected number of occurances of each bigram, if the bigram is not expected at all (key error) we set to 0
@@ -124,10 +120,10 @@ def initializeExpectationMatrix(ciphertext, spacesRemoved=False):
 
                     elif first == " " and third == " ":
                         expectedFrequencies[first+second+third] = stats[first+second+third]*(countSpaced[" 0 "])
-                    
+
                     elif second == " ":
                         expectedFrequencies[first+second+third] = stats[first+second+third]*(countSpaced["0 0"])
-                    
+
                     elif third == " " and first != " ":
                         expectedFrequencies[first+second+third] = stats[first+second+third]*(countSpaced["00 "])
 
@@ -183,7 +179,7 @@ def generateInitialKey(ciphertext):
 
     return initialKey
 
-def jakobsensAlgorithm(punativeKey, punativePlaintext, expectedDist):
+def trigramJakobsensAlgorithm(punativeKey, punativePlaintext, expectedDist):
 
     trigramFrequencies = getTrigramFrequencies(punativePlaintext)
 
@@ -221,7 +217,7 @@ def jakobsensAlgorithm(punativeKey, punativePlaintext, expectedDist):
 def testJakobsensTrigramRestart(plaintext, plaintextWords, numRestarts = 3, spacesRemoved = False):
     if spacesRemoved:
         plaintext = plaintext.replace(" ", "")
-    
+
     # Creating cipher object and generating ciphertext
     cipher = MonoalphabeticCipher()
     ciphertext = cipher.encrypt(plaintext)
@@ -237,7 +233,7 @@ def testJakobsensTrigramRestart(plaintext, plaintextWords, numRestarts = 3, spac
     expectedDist = initializeExpectationMatrix(ciphertext, spacesRemoved=spacesRemoved)
 
     # Running Jakobsens algorithm
-    derivedKey = jakobsensAlgorithm(newInitialKey, newPunativePlaintext, expectedDist)
+    derivedKey = trigramJakobsensAlgorithm(newInitialKey, newPunativePlaintext, expectedDist)
 
     print("\nFinal", cipher.evalProposedKey(ciphertext, derivedKey))
 
@@ -245,8 +241,87 @@ def testJakobsensTrigramRestart(plaintext, plaintextWords, numRestarts = 3, spac
 
     return newLettersCorrect, newPlaintextCorrect
 
+def testJakobsensTrigramRepeatedIteration(plaintext, plaintextWords, numRestarts = 3, spacesRemoved = False):
+
+    if spacesRemoved:
+        plaintext = plaintext.replace(" ", "")
+
+    # Creating cipher object and generating ciphertext
+    cipher = MonoalphabeticCipher()
+    ciphertext = cipher.encrypt(plaintext)
+
+    # Generating an initial key and decrypting the ciphertext into an initial plaintext guess
+    biExpectedDist = initBiExpectation(len(ciphertext), plaintextWords, spacesRemoved)
+    newInitialKey = biJakobsensAlgorithm(ciphertext, biExpectedDist, numRestarts=numRestarts, spacesRemoved=spacesRemoved)
+    biLettersCorrect, biPlaintextCorrect = cipher.evalProposedKey(ciphertext, newInitialKey)
+
+
+    print("\nPre", cipher.evalProposedKey(ciphertext, newInitialKey))
+
+    # Generating the expected distribution matrix
+    expectedDist = initializeExpectationMatrix(ciphertext, spacesRemoved=spacesRemoved)
+
+    # Running Jakobsens algorithm
+    newPunativePlaintext = cipher.decrypt(ciphertext, newInitialKey)
+    triKey = trigramJakobsensAlgorithm(newInitialKey, newPunativePlaintext, expectedDist)
+    triLettersCorrect, triPlaintextCorrect = cipher.evalProposedKey(ciphertext, triKey)
+    nextPunativePlaintext = cipher.decrypt(ciphertext, triKey)
+
+    print("\nFinal", cipher.evalProposedKey(ciphertext, triKey))
+
+    secondBiKey = biJakobsensAlgorithm(derivedKey, nextPunativePlaintext, biExpectedDist)
+    secondBiPunativePlaintext = cipher.decrypt(ciphertext, secondBiKey)
+    secondBiLettersCorrect, secondBiPlaintextCorrect = cipher.evalProposedKey(ciphertext, secondBiKey)
+
+
+    secondTriKey = trigramJakobsensAlgorithm(secondBiKey, secondBiPunativePlaintext, expectedDist)
+
+
+    secondTriLettersCorrect, secondTriPlaintextCorrect = cipher.evalProposedKey(ciphertext, secondTriKey)
+
+    return (biLettersCorrect, biPlaintextCorrect), (triLettersCorrect, triPlaintextCorrect), (secondBiLettersCorrect, secondBiPlaintextCorrect), (secondTriLettersCorrect, secondTriPlaintextCorrect)
+
+
+
 
 if __name__ == "__main__":
+    lettersCorrect = []
+    plaintextCorrect = []
+    plaintextWords = 50
+    spacesRemoved = True
+
+    letterResults = {"Initial Bigram": [], "Initial Trigram": [], "Second Bigram": [], "Second Trigram": []}
+    plaintextResults = {"Initial Bigram": [], "Initial Trigram": [], "Second Bigram": [], "Second Trigram": []}
+    labels = ["Initial Bigram", "Initial Trigram", "Second Bigram", "Second Trigram"]
+
+
+    for i in range(50):
+
+        # Generating and getting plaintext
+        plaintext = selectPlainText(plaintextWords)
+        if spacesRemoved:
+            plaintext = plaintext.replace(" ", "")
+
+
+        #firstBi, firstTri, secondBi, secondTri = testJakobsensTrigramRepeatedIteration(plaintext, plaintextWords, numRestarts=5, spacesRemoved=spacesRemoved)
+        results = list(testJakobsensTrigramRepeatedIteration(plaintext, plaintextWords, numRestarts=5, spacesRemoved=spacesRemoved))
+
+        #results = [firstBi, firstTri, secondBi, secondTri]
+        
+        for i in range(len(labels)):
+            letterResults[labels[i]].append(results[i][0])
+            plaintextResults[labels[i]].append(results[i][1])
+
+        # Average Letters Correct: 14.2
+        # Average Plaintext Correct: 0.6389812739530298
+
+    for label in labels:
+        print("Average Letters Correct (" + label + "):", sum(letterResults[label])/len(letterResults[label]))
+        print("Average Letters Correct (" + label + "):", sum(plaintextResults[label])/len(plaintextResults[label]))
+        print("\n")
+
+
+if False:
     lettersCorrect = []
     plaintextCorrect = []
     plaintextWords = 50
@@ -258,7 +333,6 @@ if __name__ == "__main__":
         plaintext = selectPlainText(plaintextWords)
         if spacesRemoved:
             plaintext = plaintext.replace(" ", "")
-        
 
         # Creating cipher object and generating ciphertext
         cipher = MonoalphabeticCipher()
@@ -277,7 +351,7 @@ if __name__ == "__main__":
         expectedDist = initializeExpectationMatrix(ciphertext, spacesRemoved=spacesRemoved)
 
         # Running Jakobsens algorithm
-        derivedKey = jakobsensAlgorithm(newInitialKey, newPunativePlaintext, expectedDist)
+        derivedKey = trigramJakobsensAlgorithm(newInitialKey, newPunativePlaintext, expectedDist)
 
         print("\nFinal", cipher.evalProposedKey(ciphertext, derivedKey))
 

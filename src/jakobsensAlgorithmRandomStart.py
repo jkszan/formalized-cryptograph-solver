@@ -1,7 +1,7 @@
-from src.jakobsensAlgorithm import jakobsensAlgorithm, initializeExpectationMatrix
-from src.utils.utils import selectPlainText, loadStatistics
-from src.encryption.monoalphabeticCipher import MonoalphabeticCipher
-from src.utils.stats import calculateLanguageCertainty
+from jakobsensAlgorithm import jakobsensAlgorithm, initializeExpectationMatrix
+from utils.utils import selectPlainText, loadStatistics
+from encryption.monoalphabeticCipher import MonoalphabeticCipher
+from utils.stats import calculateLanguageCertainty
 import random
 
 def generateInitialKey():
@@ -40,7 +40,7 @@ def jakobsensRandomRestart(ciphertext, expectedDist, numRestarts = 3, spacesRemo
         if languageCertaintyScore < minLanguageCert:
             bestDerivedKey = derivedKey
             minLanguageCert = languageCertaintyScore
-    
+
     return bestDerivedKey
 
 
@@ -111,8 +111,6 @@ def testJakobsensRandomRestartCheating(plaintext, plaintextWords, numRestarts = 
         if maxPlaintextCorrect < plaintextCorrect:
             bestDerivedKey = derivedKey
             maxPlaintextCorrect = plaintextCorrect
-
-    #print("\nFinal (Cheat)", cipher.evalProposedKey(ciphertext, bestDerivedKey))
 
     newLettersCorrect, newPlaintextCorrect = cipher.evalProposedKey(ciphertext, bestDerivedKey)
 

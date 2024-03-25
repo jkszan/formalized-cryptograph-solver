@@ -1,12 +1,8 @@
+from encryption.monoalphabeticCipher import MonoalphabeticCipher
+from utils.utils import selectPlainText
+
 from jakobsensAlgorithm import initializeExpectationMatrix as initializeBigramExpectation, getDigramFrequencies, DistributionMatrix, generateInitialKey
 from trigramJakobsens import initializeExpectationMatrix as initializeTrigramExpectation, getTrigramFrequencies, DistributionCube
-
-import sys,os
-sys.path.append(os.getcwd())
-
-from utils.utils import loadStatistics, selectPlainText
-from encryption.monoalphabeticCipher import MonoalphabeticCipher
-from collections import defaultdict
 
 LETTERORDER = "abcdefghijklmnopqrstuvwxyz "
 LETTERINDEX = {'a': 0, 'b': 1, 'c': 2, 'd': 3,
@@ -39,7 +35,7 @@ class DistributionMeasure:
 
         self.initialCubeScore = self.distributionCube.calculateFullScore(expectedTrigramDist)
         self.initialMatrixScore = self.distributionMatrix.calculateFullScore(expectedDigramDist)
-    
+
     def swapRowAndColumns(self, rowOne, rowTwo):
         self.distributionCube.swapRowAndColumns(rowOne, rowTwo)
         self.distributionMatrix.swapRowAndColumns(rowOne, rowTwo)
@@ -94,7 +90,7 @@ def biTriJakobsensAlgorithm(punativeKey, punativePlaintext, expectedDigramDist, 
 def testBiTriJakobsens(plaintext, plaintextWords, spacesRemoved = False):
     if spacesRemoved:
         plaintext = plaintext.replace(" ", "")
-    
+
     # Creating cipher object and generating ciphertext
     cipher = MonoalphabeticCipher()
     ciphertext = cipher.encrypt(plaintext)

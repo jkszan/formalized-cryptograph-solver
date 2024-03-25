@@ -43,11 +43,11 @@ if __name__ == "__main__":
     plaintextSamples = []
     for i in range(sampleNum):
         plaintextSamples.append(selectPlainText(50))
-        
+
     print(plaintextSamples)
     # Serializing json
     json_object = json.dumps(plaintextSamples, indent=4)
-    
+
     # Writing to sample.json
     with open("samplePlaintext.json", "w") as outfile:
         outfile.write(json_object)

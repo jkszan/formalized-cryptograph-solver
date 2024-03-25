@@ -45,7 +45,7 @@ class MonoalphabeticCipher:
         self.keyCodex = {}
         for index in range(len(randomizedAlpha)):
             self.keyCodex[LETTERORDER[index]] = randomizedAlpha[index]
-    
+
     def evalProposedKey(self, text, proposedKey):
 
         keysCorrect = 0
@@ -53,13 +53,12 @@ class MonoalphabeticCipher:
         for key, mapping in proposedKey.items():
             if self.keyCodex[key] == mapping:
                 keysCorrect += 1
-        
+
         realPlaintext = self.decrypt(text)
         proposedPlaintext = self.decrypt(text, proposedKey)
         lettersCorrect = 0
         lettersTotal = 0
-        #print(realPlaintext)
-        #print(proposedPlaintext)
+
         for letterPosition in range(len(realPlaintext)):
 
             if realPlaintext[letterPosition] != " ":

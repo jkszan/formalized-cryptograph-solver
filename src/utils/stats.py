@@ -37,7 +37,7 @@ def calculateLanguageCertainty(proposedPlaintext, statsJson, curMin=float("inf")
         # If we fully trusted our statistics this should return infinite loss, not 0
         except ZeroDivisionError:
             loss += pow(counts[ngram], 2)
-        
+
         #if curMin < loss:
         #    return loss
 

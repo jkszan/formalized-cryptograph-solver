@@ -54,7 +54,7 @@ def findMostLikely(cleanCrypt, T):
 
     for i, letter in enumerate(key):
         starting_codex[letter] = T[i]
-    
+
     decrypted = attemptDecrypt(cleanCrypt, starting_codex)
     prox = calculateLanguageCertainty(decrypted, statsJson)
 
@@ -75,13 +75,13 @@ def findMostLikely(cleanCrypt, T):
             else:
                 j = j+1
         swap = [i, j]
-        
+
         newKey = curKey.copy()
         newKey[swap[0]], newKey[swap[1]] = curKey[swap[1]], curKey[swap[0]]
 
         for i, letter in enumerate(newKey):
             codex[letter] = T[i]
-        
+
         decrypted = attemptDecrypt(cleanCrypt, codex)
         prox = calculateLanguageCertainty(decrypted, statsJson) #curMin)
 
@@ -91,7 +91,7 @@ def findMostLikely(cleanCrypt, T):
             curKey = newKey
             a = 1
             b = 1
-        
+
         # Random modification with slight possibility to take a worse option for next generation
         if prox < curProx or random.random() < 0.05:
             curProx = prox

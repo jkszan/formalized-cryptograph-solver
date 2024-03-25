@@ -1,8 +1,5 @@
-import sys,os
-sys.path.append(os.getcwd())
-
-from src.utils.utils import loadStatistics, selectPlainText
-from src.encryption.monoalphabeticCipher import MonoalphabeticCipher
+from utils.utils import loadStatistics, selectPlainText
+from encryption.monoalphabeticCipher import MonoalphabeticCipher
 from collections import defaultdict
 
 LETTERORDER = "abcdefghijklmnopqrstuvwxyz "
@@ -30,7 +27,8 @@ class DistributionMatrix:
         self.rowMap : dict[int, str] = {}
 
         # The bigram frequency matrix of the punative plaintext
-        self.letterMatrix : list[list[int]] = [[0]*len(LETTERORDER) for _ in range(len(LETTERORDER))] # Square [0][0] corresponds to ciphertext bigram AA, and plaintext bigram rowMap[0] + colMap[0]
+        # Square [0][0] corresponds to ciphertext bigram AA, and plaintext bigram rowMap[0] + colMap[0]
+        self.letterMatrix : list[list[int]] = [[0]*len(LETTERORDER) for _ in range(len(LETTERORDER))]
 
         for ciphertextLetter, plaintextLetter in initialLetterKey.items():
             self.rowMap[LETTERINDEX[ciphertextLetter]] = plaintextLetter

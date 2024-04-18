@@ -1,5 +1,5 @@
 from jakobsensAlgorithmRandomStart import jakobsensRandomRestart as biJakobsensAlgorithm
-from jakobsensAlgorithm import initializeExpectationMatrix as initBiExpectation
+from jakobsensAlgorithm import initializeExpectationMatrix as initBiExpectation, jakobsensAlgorithm as baseJakobsens
 from utils.utils import loadStatistics, selectPlainText
 from encryption.monoalphabeticCipher import MonoalphabeticCipher
 from collections import defaultdict
@@ -214,6 +214,30 @@ def trigramJakobsensAlgorithm(punativeKey, punativePlaintext, expectedDist):
 
     return punativeKey
 
+def testTrigramJakobsensAlgorithm(plaintext, plaintextWords, spacesRemoved = False):
+    if spacesRemoved:
+        plaintext = plaintext.replace(" ", "")
+
+    # Creating cipher object and generating ciphertext
+    cipher = MonoalphabeticCipher()
+    ciphertext = cipher.encrypt(plaintext)
+
+    # Generating the expected distribution matrix
+    expectedDist = initializeExpectationMatrix(ciphertext, spacesRemoved=spacesRemoved)
+
+    initialKey = generateInitialKey(ciphertext)
+
+    punativePlaintext = cipher.decrypt(ciphertext, initialKey)
+
+    # Running Jakobsens algorithm
+    derivedKey = trigramJakobsensAlgorithm(initialKey, punativePlaintext, expectedDist)
+
+    #print("\nFinal", cipher.evalProposedKey(ciphertext, derivedKey))
+
+    newLettersCorrect, newPlaintextCorrect = cipher.evalProposedKey(ciphertext, derivedKey)
+
+    return newLettersCorrect, newPlaintextCorrect
+
 def testJakobsensTrigramRestart(plaintext, plaintextWords, numRestarts = 3, spacesRemoved = False):
     if spacesRemoved:
         plaintext = plaintext.replace(" ", "")
@@ -256,7 +280,7 @@ def testJakobsensTrigramRepeatedIteration(plaintext, plaintextWords, numRestarts
     biLettersCorrect, biPlaintextCorrect = cipher.evalProposedKey(ciphertext, newInitialKey)
 
 
-    print("\nPre", cipher.evalProposedKey(ciphertext, newInitialKey))
+    print("\nInitial Bi", cipher.evalProposedKey(ciphertext, newInitialKey))
 
     # Generating the expected distribution matrix
     expectedDist = initializeExpectationMatrix(ciphertext, spacesRemoved=spacesRemoved)
@@ -264,17 +288,19 @@ def testJakobsensTrigramRepeatedIteration(plaintext, plaintextWords, numRestarts
     # Running Jakobsens algorithm
     newPunativePlaintext = cipher.decrypt(ciphertext, newInitialKey)
     triKey = trigramJakobsensAlgorithm(newInitialKey, newPunativePlaintext, expectedDist)
+    print("Initial Tri", cipher.evalProposedKey(ciphertext, triKey))
     triLettersCorrect, triPlaintextCorrect = cipher.evalProposedKey(ciphertext, triKey)
     nextPunativePlaintext = cipher.decrypt(ciphertext, triKey)
 
-    print("\nFinal", cipher.evalProposedKey(ciphertext, triKey))
+    secondBiKey = baseJakobsens(triKey, nextPunativePlaintext, biExpectedDist)
+    print("Second Bi", cipher.evalProposedKey(ciphertext, secondBiKey))
 
-    secondBiKey = biJakobsensAlgorithm(derivedKey, nextPunativePlaintext, biExpectedDist)
     secondBiPunativePlaintext = cipher.decrypt(ciphertext, secondBiKey)
     secondBiLettersCorrect, secondBiPlaintextCorrect = cipher.evalProposedKey(ciphertext, secondBiKey)
 
 
     secondTriKey = trigramJakobsensAlgorithm(secondBiKey, secondBiPunativePlaintext, expectedDist)
+    print("Second Tri", cipher.evalProposedKey(ciphertext, secondTriKey))
 
 
     secondTriLettersCorrect, secondTriPlaintextCorrect = cipher.evalProposedKey(ciphertext, secondTriKey)

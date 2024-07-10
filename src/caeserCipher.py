@@ -1,4 +1,5 @@
-from src.utils.utils import loadStatistics
+from utils.utils import loadStatistics
+from utils.stats import calculateLanguageCertainty
 from collections import defaultdict
 
 LETTERORDER = "abcdefghijklmnopqrstuvwxyz"
@@ -10,41 +11,11 @@ LETTERINDEX = {'a': 0, 'b': 1, 'c': 2, 'd': 3,
                'u': 20, 'v': 21, 'w': 22, 'x': 23,
                'y': 24, 'z': 25}
 
-def calculateLanguageCertainty(proposedPlaintext, spacesRemoved=False):
+def decryptCaesar(ciphertext, spacesRemoved=False):
 
-    statsJson = loadStatistics(spacesRemoved)
-    counts = defaultdict(lambda: 0)
-
-
-    for i in range(len(proposedPlaintext)):
-
-        if proposedPlaintext[i] != " ":
-            counts[proposedPlaintext[i]] += 1
-
-        if i > 0:
-            counts[proposedPlaintext[i-1:i+1]] += 1
-
-        if i > 1:
-            counts[proposedPlaintext[i-2:i+1]] += 1
-
-    loss = 0
-    for ngram, count in counts.items():
-        try:
-            # Using a naive loss function of distance between expected occurances as a percentage of expected value
-            expected = statsJson[ngram] * (len(proposedPlaintext) - len(ngram))
-            loss += abs(((count - expected))/expected)
-
-        # KeyError will happen in the case that a bigram/trigram is not represented at all in the statistics json (probability of 0)
-        # If we fully trusted our statistics this should return infinite loss, not 0
-        except KeyError:
-            loss += 0
-
-    return loss
-
-def decryptCaesar(ciphertext):
-
-    minChi = float('inf')
+    minLoss = float('inf')
     minI = -1
+    statsJson = loadStatistics(spacesRemoved)
 
     for i in range(1, 26):
         newPlaintext = ""
@@ -56,10 +27,10 @@ def decryptCaesar(ciphertext):
                 newLetter = newLetter % 26
                 newPlaintext += LETTERORDER[newLetter]
 
-        newChi = calculateLanguageCertainty(newPlaintext)
+        newLoss = calculateLanguageCertainty(newPlaintext, statsJson)
 
-        if newChi < minChi:
-            minChi = newChi
+        if newLoss < minLoss:
+            minLoss = newLoss
             minI = i
 
     return minI
